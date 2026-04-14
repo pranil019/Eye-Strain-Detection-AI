@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Digital Eye Strain Monitor</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="logo">👁️ EyeGuard</div>
+      <div class="header-right">
+        <span id="session-time">00:00:00</span>
+        <button id="toggle-btn" class="btn-primary">Start Monitoring</button>
+      </div>
+    </header>
+
+    <div class="main-grid">
+      <!-- Camera feed -->
+      <div class="card camera-card">
+        <div class="card-title">Live Feed</div>
+        <div class="video-wrapper">
+          <video id="video" autoplay muted playsinline></video>
+          <canvas id="overlay" class="overlay"></canvas>
+          <div id="status-badge" class="badge badge-idle">IDLE</div>
+        </div>
+      </div>
+
+      <!-- Metrics -->
+      <div class="metrics-panel">
+        <div class="card metric-card" id="card-ear">
+          <div class="metric-label">Eye Aspect Ratio</div>
+          <div class="metric-value" id="val-ear">--</div>
+          <div class="metric-bar"><div class="bar-fill" id="bar-ear"></div></div>
+          <div class="metric-hint">Normal &gt; 0.25</div>
+        </div>
+        <div class="card metric-card" id="card-blink">
+          <div class="metric-label">Blink Rate</div>
+          <div class="metric-value" id="val-blink">-- <span class="unit">/min</span></div>
+          <div class="metric-bar"><div class="bar-fill" id="bar-blink"></div></div>
+          <div class="metric-hint">Normal 15–20/min</div>
+        </div>
+        <div class="card metric-card" id="card-red">
+          <div class="metric-label">Eye Redness</div>
+          <div class="metric-value" id="val-red">--%</div>
+          <div class="metric-bar"><div class="bar-fill" id="bar-red"></div></div>
+          <div class="metric-hint">Normal &lt; 10%</div>
+        </div>
+        <div class="card metric-card" id="card-pupil">
+          <div class="metric-label">Pupil Dilation</div>
+          <div class="metric-value" id="val-pupil">--</div>
+          <div class="metric-bar"><div class="bar-fill" id="bar-pupil"></div></div>
+          <div class="metric-hint">Relative ratio</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Strain gauge -->
+    <div class="card strain-card">
+      <div class="card-title">Strain Score</div>
+      <div class="strain-gauge">
+        <svg viewBox="0 0 200 110" class="gauge-svg">
+          <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#e5e5e5" stroke-width="16" stroke-linecap="round"/>
+          <path id="gauge-fill" d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#22c55e" stroke-width="16" stroke-linecap="round"
+                stroke-dasharray="251" stroke-dashoffset="251" style="transition:all 0.8s ease"/>
+          <text id="gauge-score" x="100" y="88" text-anchor="middle" font-size="28" font-weight="700" fill="var(--text)">0</text>
+          <text x="100" y="106" text-anchor="middle" font-size="10" fill="var(--text-muted)">/ 100</text>
+        </svg>
+        <div class="strain-label" id="strain-label">Monitoring Off</div>
+      </div>
+    </div>
+
+    <!-- Suggestions -->
+    <div class="card suggestions-card">
+      <div class="card-title">AI Suggestions <span id="rag-badge" class="badge-rag">RAG</span></div>
+      <div id="suggestions-box" class="suggestions-box">
+        <p class="placeholder-text">Start monitoring to receive personalized eye health suggestions powered by RAG + LangChain...</p>
+      </div>
+      <button id="refresh-suggestions" class="btn-secondary" disabled>Refresh Suggestions</button>
+    </div>
+
+    <!-- Toast alerts -->
+    <div id="toast-container"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
