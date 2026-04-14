@@ -3,87 +3,275 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Digital Eye Strain Monitor</title>
+  <title>EyeGuard — Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <div class="app">
-    <header>
-      <div class="logo">👁️ EyeGuard</div>
-      <div class="header-right">
-        <span id="session-time">00:00:00</span>
-        <button id="toggle-btn" class="btn-primary">Start Monitoring</button>
+  <div class="bg-scene"></div>
+  <div class="grid-lines"></div>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+ 
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="eye-icon-sm">👁</div>
+      <span class="logo-text">Eye<b>Guard</b></span>
+    </div>
+ 
+    <nav class="sidebar-nav">
+      <a class="nav-item active" href="#" data-page="dashboard">
+        <span class="nav-icon">◉</span> Dashboard
+      </a>
+      <a class="nav-item" href="#" data-page="history">
+        <span class="nav-icon">◈</span> History
+      </a>
+      <a class="nav-item" href="#" data-page="settings">
+        <span class="nav-icon">◎</span> Settings
+      </a>
+    </nav>
+ 
+    <div class="sidebar-user">
+      <div class="avatar" id="user-avatar">?</div>
+      <div class="user-info">
+        <div class="user-name" id="user-name">Loading...</div>
+        <div class="user-email" id="user-email"></div>
       </div>
-    </header>
-
-    <div class="main-grid">
-      <!-- Camera feed -->
-      <div class="card camera-card">
-        <div class="card-title">Live Feed</div>
-        <div class="video-wrapper">
-          <video id="video" autoplay muted playsinline></video>
-          <canvas id="overlay" class="overlay"></canvas>
-          <div id="status-badge" class="badge badge-idle">IDLE</div>
+      <button class="logout-btn" onclick="logout()" title="Sign out">⏻</button>
+    </div>
+  </aside>
+ 
+  <!-- Main -->
+  <main class="main">
+ 
+    <!-- Top Bar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="page-title">Live Monitor</div>
+        <div class="session-chip" id="session-chip">
+          <span class="chip-dot"></span>
+          Session: <span id="session-time">00:00:00</span>
         </div>
       </div>
-
-      <!-- Metrics -->
-      <div class="metrics-panel">
-        <div class="card metric-card" id="card-ear">
-          <div class="metric-label">Eye Aspect Ratio</div>
-          <div class="metric-value" id="val-ear">--</div>
-          <div class="metric-bar"><div class="bar-fill" id="bar-ear"></div></div>
-          <div class="metric-hint">Normal &gt; 0.25</div>
+      <div class="topbar-right">
+        <div class="api-status" id="api-status">
+          <span class="status-dot dot-off"></span> API Disconnected
         </div>
-        <div class="card metric-card" id="card-blink">
-          <div class="metric-label">Blink Rate</div>
-          <div class="metric-value" id="val-blink">-- <span class="unit">/min</span></div>
-          <div class="metric-bar"><div class="bar-fill" id="bar-blink"></div></div>
-          <div class="metric-hint">Normal 15–20/min</div>
-        </div>
-        <div class="card metric-card" id="card-red">
-          <div class="metric-label">Eye Redness</div>
-          <div class="metric-value" id="val-red">--%</div>
-          <div class="metric-bar"><div class="bar-fill" id="bar-red"></div></div>
-          <div class="metric-hint">Normal &lt; 10%</div>
-        </div>
-        <div class="card metric-card" id="card-pupil">
-          <div class="metric-label">Pupil Dilation</div>
-          <div class="metric-value" id="val-pupil">--</div>
-          <div class="metric-bar"><div class="bar-fill" id="bar-pupil"></div></div>
-          <div class="metric-hint">Relative ratio</div>
-        </div>
+        <button class="btn-monitor" id="toggle-btn" onclick="toggleMonitor()">
+          <span id="btn-icon">▶</span>
+          <span id="btn-label">Start</span>
+        </button>
       </div>
     </div>
-
-    <!-- Strain gauge -->
-    <div class="card strain-card">
-      <div class="card-title">Strain Score</div>
-      <div class="strain-gauge">
-        <svg viewBox="0 0 200 110" class="gauge-svg">
-          <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#e5e5e5" stroke-width="16" stroke-linecap="round"/>
-          <path id="gauge-fill" d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#22c55e" stroke-width="16" stroke-linecap="round"
-                stroke-dasharray="251" stroke-dashoffset="251" style="transition:all 0.8s ease"/>
-          <text id="gauge-score" x="100" y="88" text-anchor="middle" font-size="28" font-weight="700" fill="var(--text)">0</text>
-          <text x="100" y="106" text-anchor="middle" font-size="10" fill="var(--text-muted)">/ 100</text>
-        </svg>
-        <div class="strain-label" id="strain-label">Monitoring Off</div>
+ 
+    <!-- Dashboard Page -->
+    <div class="page" id="page-dashboard">
+      <div class="dashboard-grid">
+ 
+        <!-- Camera -->
+        <div class="glass-card camera-card">
+          <div class="card-header">
+            <span class="card-label">Live Feed</span>
+            <div id="live-badge" class="live-badge live-idle">● IDLE</div>
+          </div>
+          <div class="video-container">
+            <video id="video" autoplay muted playsinline></video>
+            <canvas id="canvas" class="hidden-canvas"></canvas>
+            <!-- Scan line overlay -->
+            <div class="scan-overlay" id="scan-overlay"></div>
+            <!-- Corner decorations -->
+            <div class="corner tl"></div>
+            <div class="corner tr"></div>
+            <div class="corner bl"></div>
+            <div class="corner br"></div>
+            <!-- Eye state pill -->
+            <div class="eye-state-pill" id="eye-state-pill">👁 Waiting...</div>
+          </div>
+          <!-- Mini stats under video -->
+          <div class="mini-stats">
+            <div class="mini-stat">
+              <span class="ms-label">Frames</span>
+              <span class="ms-val" id="ms-frames">0</span>
+            </div>
+            <div class="mini-stat">
+              <span class="ms-label">Last scan</span>
+              <span class="ms-val" id="ms-last">--</span>
+            </div>
+            <div class="mini-stat">
+              <span class="ms-label">State</span>
+              <span class="ms-val" id="ms-state">--</span>
+            </div>
+          </div>
+        </div>
+ 
+        <!-- Right column: metrics + gauge -->
+        <div class="right-column">
+ 
+          <!-- Strain Gauge -->
+          <div class="glass-card gauge-card">
+            <div class="card-header">
+              <span class="card-label">Strain Score</span>
+              <span class="card-hint" id="strain-hint">—</span>
+            </div>
+            <div class="gauge-area">
+              <svg class="gauge-svg" viewBox="0 0 220 130">
+                <defs>
+                  <linearGradient id="gGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%"   stop-color="#7DF9C2"/>
+                    <stop offset="50%"  stop-color="#FFD166"/>
+                    <stop offset="100%" stop-color="#FF6B6B"/>
+                  </linearGradient>
+                </defs>
+                <!-- Track -->
+                <path d="M24 110 A88 88 0 0 1 196 110" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="14" stroke-linecap="round"/>
+                <!-- Gradient fill -->
+                <path id="gauge-fill" d="M24 110 A88 88 0 0 1 196 110" fill="none" stroke="url(#gGrad)" stroke-width="14" stroke-linecap="round"
+                      stroke-dasharray="277" stroke-dashoffset="277" style="transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1)"/>
+                <!-- Score text -->
+                <text id="gauge-num" x="110" y="96" text-anchor="middle" font-family="Syne,sans-serif" font-size="36" font-weight="800" fill="#F0F4FF">0</text>
+                <text x="110" y="116" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="10" fill="rgba(240,244,255,0.4)">/100 strain</text>
+              </svg>
+              <div class="gauge-ticks">
+                <span>Low</span><span>Moderate</span><span>High</span>
+              </div>
+            </div>
+          </div>
+ 
+          <!-- 4 Metric Cards -->
+          <div class="metrics-grid">
+            <div class="metric-card" id="mc-ear">
+              <div class="mc-top">
+                <span class="mc-label">EAR</span>
+                <span class="mc-icon">👁</span>
+              </div>
+              <div class="mc-value" id="v-ear">—</div>
+              <div class="mc-bar-wrap"><div class="mc-bar" id="b-ear"></div></div>
+              <div class="mc-sub">Normal &gt; 0.25</div>
+            </div>
+            <div class="metric-card" id="mc-blink">
+              <div class="mc-top">
+                <span class="mc-label">Blink Rate</span>
+                <span class="mc-icon">✦</span>
+              </div>
+              <div class="mc-value" id="v-blink">— <small>/min</small></div>
+              <div class="mc-bar-wrap"><div class="mc-bar" id="b-blink"></div></div>
+              <div class="mc-sub">Normal 15–20/min</div>
+            </div>
+            <div class="metric-card" id="mc-red">
+              <div class="mc-top">
+                <span class="mc-label">Redness</span>
+                <span class="mc-icon">◈</span>
+              </div>
+              <div class="mc-value" id="v-red">—%</div>
+              <div class="mc-bar-wrap"><div class="mc-bar" id="b-red"></div></div>
+              <div class="mc-sub">Normal &lt; 10%</div>
+            </div>
+            <div class="metric-card" id="mc-pupil">
+              <div class="mc-top">
+                <span class="mc-label">Pupil</span>
+                <span class="mc-icon">◎</span>
+              </div>
+              <div class="mc-value" id="v-pupil">—</div>
+              <div class="mc-bar-wrap"><div class="mc-bar" id="b-pupil"></div></div>
+              <div class="mc-sub">Relative ratio</div>
+            </div>
+          </div>
+        </div>
+ 
+        <!-- Suggestions -->
+        <div class="glass-card suggestions-card">
+          <div class="card-header">
+            <span class="card-label">AI Recommendations</span>
+            <div class="rag-chips">
+              <span class="chip chip-rag">RAG</span>
+              <span class="chip chip-lc">LangChain</span>
+            </div>
+            <button class="refresh-btn" id="refresh-btn" onclick="fetchSuggestions()" disabled>↻ Refresh</button>
+          </div>
+          <div class="suggestions-body" id="suggestions-body">
+            <div class="suggest-placeholder">
+              <div class="suggest-icon">🧠</div>
+              <p>Start monitoring to receive AI-powered eye health recommendations based on your real-time metrics.</p>
+            </div>
+          </div>
+        </div>
+ 
       </div>
     </div>
-
-    <!-- Suggestions -->
-    <div class="card suggestions-card">
-      <div class="card-title">AI Suggestions <span id="rag-badge" class="badge-rag">RAG</span></div>
-      <div id="suggestions-box" class="suggestions-box">
-        <p class="placeholder-text">Start monitoring to receive personalized eye health suggestions powered by RAG + LangChain...</p>
+ 
+    <!-- History Page -->
+    <div class="page hidden" id="page-history">
+      <div class="glass-card" style="padding:40px;">
+        <div class="card-label" style="margin-bottom:20px;">Session History</div>
+        <div id="history-list"><p style="color:var(--muted);font-size:0.9rem;">No sessions recorded yet. Start monitoring to build your history.</p></div>
       </div>
-      <button id="refresh-suggestions" class="btn-secondary" disabled>Refresh Suggestions</button>
     </div>
-
-    <!-- Toast alerts -->
-    <div id="toast-container"></div>
+ 
+    <!-- Settings Page -->
+    <div class="page hidden" id="page-settings">
+      <div class="glass-card" style="padding:40px;max-width:560px;">
+        <div class="card-label" style="margin-bottom:24px;">Settings</div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-title">API Endpoint</div>
+            <div class="setting-sub">Your ngrok URL from Google Colab</div>
+          </div>
+          <input type="text" id="api-input" class="setting-input" placeholder="https://xxxx.ngrok-free.app"/>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-title">Scan Interval</div>
+            <div class="setting-sub">How often to send frames to API</div>
+          </div>
+          <select class="setting-select" id="interval-select">
+            <option value="1000">Every 1s</option>
+            <option value="2000" selected>Every 2s</option>
+            <option value="3000">Every 3s</option>
+            <option value="5000">Every 5s</option>
+          </select>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-title">20-20-20 Reminders</div>
+            <div class="setting-sub">Alert every 20 minutes</div>
+          </div>
+          <label class="toggle-sw">
+            <input type="checkbox" id="reminder-toggle" checked/>
+            <span class="sw-track"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-title">High Strain Alert</div>
+            <div class="setting-sub">Notify when strain score &gt; 70</div>
+          </div>
+          <label class="toggle-sw">
+            <input type="checkbox" id="alert-toggle" checked/>
+            <span class="sw-track"></span>
+          </label>
+        </div>
+        <button class="btn-save" onclick="saveSettings()">Save Settings</button>
+      </div>
+    </div>
+ 
+  </main>
+ 
+  <!-- Toast container -->
+  <div id="toasts"></div>
+ 
+  <!-- 20-20-20 Modal -->
+  <div class="modal-backdrop hidden" id="modal-backdrop">
+    <div class="modal-box">
+      <div class="modal-icon">👁</div>
+      <div class="modal-title">20-20-20 Break Time!</div>
+      <p class="modal-body">You've been working for 20 minutes.<br>Look at something <strong>20 feet away</strong> for <strong>20 seconds</strong> to relax your eye muscles.</p>
+      <div class="modal-timer" id="modal-timer">20</div>
+      <button class="modal-btn" onclick="closeModal()">Got it, starting now</button>
+    </div>
   </div>
-
+ 
   <script src="app.js"></script>
 </body>
 </html>
+ 
